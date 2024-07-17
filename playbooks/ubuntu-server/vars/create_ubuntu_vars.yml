@@ -1,0 +1,19 @@
+vcenter_hostname: "hostname-of-vcenter"  # Hostname of your vSphere server.
+vcenter_username: "administrator@vsphere"  # Username of your vSphere server.
+vcenter_password: "vcenter-password"  # Password of your vSphere server.
+datacenter: "Datacenter"  # Name of your datacenter in vSphere.
+datastore: "datastore1"  # Name of your datastore where you will store your VM disk.
+template: "ubuntu-24-04-template"  # Name of the template that you want to use for creating a VM.
+folder: "/Datacenter/vm"  # Folder where you will create a VM.
+vm_name: "new-ubuntu-vm"  # Name of your new VM.
+guest_domain: "example.com"  # Put your guest domain here.
+networks:
+  - name: "VM Network"
+    ip: "192.168.xx.xx"  # Specify a full static IP address for your VM.
+    netmask: "255.255.255.0"  # Specify the subnet here.
+    gateway: "192.168.xx.xx"  # Add your gateway.
+    interface: "ens160"  # Specify the network interface.
+cluster: "Cluster1"  # Name or IP of your cluster.
+ubuntuvmdisksize: "40"  # Size of the disk you want to set for your VM (in GB).
+hostname: "new-ubuntu-host"  # Hostname for your VM.
+ssh_user: "ubuntu"  # Replace with your username in the VM.

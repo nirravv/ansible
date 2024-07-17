@@ -1,0 +1,16 @@
+---
+- name: Update Ubuntu packages
+  hosts: ubuntu
+  become: true  # Use sudo to run the tasks
+  tasks:
+    - name: Update the apt package index
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist  # Use 'dist' for a full upgrade
+
+# TO run this to all ubuntu servers please first add your servers under inventory/hosts.ini file 
+# under [ubuntu] according to the example that is given.
+# and use this command ansible-playbook -i inventory/hosts.ini update_ubuntu.yml

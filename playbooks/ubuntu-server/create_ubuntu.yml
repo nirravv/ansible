@@ -1,0 +1,100 @@
+---
+- name: Clone a virtual machine from Linux template and customize
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/create_ubuntu_vars.yml
+
+  tasks:
+    - name: Clone the virtual machine
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: False
+        datacenter: "{{ datacenter }}"
+        state: present
+        template: "{{ template }}"
+        folder: "{{ folder }}"
+        name: "{{ vm_name }}"
+        cluster: "{{ cluster }}"
+        disk:
+          - size_gb: "{{ ubuntuvmdisksize }}"
+            type: thin
+            datastore: "{{ datastore }}"
+        networks:
+          - name: "{{ networks[0].name }}"
+            ip: "{{ networks[0].ip }}"
+            netmask: "{{ networks[0].netmask }}"
+        wait_for_ip_address: true  # Wait for the VM to get an IP
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ networks[0].ip }}"
+        port: 22
+        delay: 10
+        timeout: 300
+        state: started
+
+    - name: Add SSH key to known hosts
+      shell: "ssh-keyscan -H {{ networks[0].ip }} >> ~/.ssh/known_hosts"
+      delegate_to: localhost
+
+    - name: Add new VM to the inventory
+      add_host:
+        name: new_vm
+        ansible_host: "{{ networks[0].ip }}"
+        ansible_user: "{{ ssh_user }}"
+
+- name: Configure the cloned VM
+  hosts: new_vm
+  gather_facts: no
+  vars_files:
+    - vars/create_ubuntu_vars.yml
+  tasks:
+    - name: Set the hostname
+      ansible.builtin.shell: |
+        hostnamectl set-hostname {{ hostname }}
+      become: yes
+      remote_user: "{{ ssh_user }}"
+
+    - name: Remove existing Netplan configuration files
+      ansible.builtin.file:
+        path: /etc/netplan/*.yaml
+        state: absent
+      become: yes
+      remote_user: "{{ ssh_user }}"
+
+    - name: Configure network interfaces using Netplan
+      ansible.builtin.copy:
+        content: |
+          network:
+            version: 2
+            ethernets:
+              {{ networks[0].interface }}:
+                addresses:
+                  - {{ networks[0].ip }}/24
+                nameservers:
+                  addresses:
+                    - {{ networks[0].gateway }}
+                    - 8.8.8.8
+                  search:
+                    - {{ guest_domain }}
+                routes:
+                  - to: default
+                    via: {{ networks[0].gateway }}
+        dest: /etc/netplan/01-netcfg.yaml
+      become: yes
+      remote_user: "{{ ssh_user }}"
+
+    - name: Apply netplan configuration
+      ansible.builtin.shell: |
+        netplan apply
+      become: yes
+      remote_user: "{{ ssh_user }}"
+
+    - name: Reboot the VM to apply changes
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+      become: yes
+      remote_user: "{{ ssh_user }}"
