@@ -1,0 +1,10 @@
+---
+- name: Install at command on Ubuntu servers
+  hosts: ubuntu_servers
+  become: yes  # Ensure privilege escalation is enabled
+
+  tasks:
+    - name: Install at package
+      apt:
+        name: at
+        state: present

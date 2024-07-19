@@ -30,6 +30,14 @@ sudo ./ubuntu-cleanup-template.sh
 
 ## After that please make a template of your ubuntu-server and use playbook to create future VMs out of it.
 
+## Then Just go to following path and set your Vsphere credentials and VM configurations.
+
+```
+vi playbooks/deployments/vars/create_ubuntu_vars.yml
+```
+
+## Now just run following command to deploy the VM according to varibales you just set up.
+
 ```
 ansible-playbook playbooks/ubuntu-server/create-ubuntu.yml
 ```
