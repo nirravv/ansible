@@ -1,0 +1,20 @@
+---
+- name: Upgrade Ubuntu OS
+  hosts: upgrade_ubuntu_os
+  become: yes  # To escalate privileges using sudo
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+
+    - name: Perform non-interactive release upgrade
+      command: do-release-upgrade -d -f DistUpgradeViewNonInteractive
+      args:
+        creates: /var/log/dist-upgrade/main.log
