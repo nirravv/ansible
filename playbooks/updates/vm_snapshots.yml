@@ -1,0 +1,53 @@
+---
+# This playbook is used to Take snapshots of the VMs before doing any upgrades to the server.
+- name: Create a snapshot of VMs by name on ESXi host
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    esxi_host: "192.168.xx.xx"  # Replace with your ESXi host IP or hostname and make sure you have ssh access to this server from ansible server.
+    vm_names: "{{ groups['ubuntu_servers_snapshots'] }}"  # Get VM names from the esxi_vms group (in your inventory/hosts file define this group)
+    snapshot_name: "Ansible_{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}"  # Replace with the snapshot name you want to create
+
+  tasks:
+    - name: Construct awk command dynamically
+      set_fact:
+        awk_conditions: "{{ vm_names | map('regex_replace', '^', '$2 == \"') | map('regex_replace', '$', '\"') | join(' || ') }}"
+
+    - name: Get the VM IDs by VM names
+      shell: |
+        ssh root@{{ esxi_host }} vim-cmd vmsvc/getallvms | awk '{{ awk_conditions }} {print $1}'
+      register: vm_id_output
+      delegate_to: localhost
+
+    - name: Strip any whitespace or newlines from the VM IDs
+      set_fact:
+        vm_ids: "{{ vm_id_output.stdout.split('\n') | map('trim') | list }}"
+
+    - name: Fail if no VM IDs were found
+      fail:
+        msg: "VMs with names {{ vm_names }} not found."
+      when: vm_ids | length == 0
+
+    - name: Debug VM IDs
+      debug:
+        msg: "VM IDs found: {{ vm_ids }}"
+
+    - name: Create snapshots for each VM using their IDs
+      shell: |
+        ssh root@{{ esxi_host }} vim-cmd vmsvc/snapshot.create {{ item }} "{{ snapshot_name }}" "Snapshot created via Ansible"
+      loop: "{{ vm_ids }}"
+      delegate_to: localhost
+      register: snapshot_results
+
+    - name: Debug snapshot creation results
+      debug:
+        var: snapshot_results
+
+    - name: List VMs with successful snapshots
+      set_fact:
+        successful_vms: "{{ snapshot_results.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+
+    - name: Display VMs with successful snapshots
+      debug:
+        msg: "VMs with successful snapshots: {{ successful_vms }}"
