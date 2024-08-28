@@ -2,6 +2,7 @@
 - name: Install at command on Ubuntu servers
   hosts: ubuntu_servers
   become: yes  # Ensure privilege escalation is enabled
+  inventory: ../inventory/hosts.ini  # Update this path if you make any changes to inventory file location
 
   tasks:
     - name: Install at package

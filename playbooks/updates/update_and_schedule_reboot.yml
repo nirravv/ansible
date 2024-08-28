@@ -3,6 +3,8 @@
 - name: Update Ubuntu servers, check reboot status, and schedule restart if needed
   hosts: ubuntu_servers
   become: yes
+  inventory: ../inventory/hosts.ini  # Update this path if you make any changes to inventory file location
+  
   tasks:
     - name: Update apt package cache
       apt:

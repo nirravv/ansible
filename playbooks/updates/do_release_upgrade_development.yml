@@ -2,6 +2,7 @@
 - name: Upgrade Ubuntu OS
   hosts: upgrade_ubuntu_os
   become: yes  # To escalate privileges using sudo
+  inventory: ../inventory/hosts.ini  # Update this path if you make any changes to inventory file location
 
   tasks:
     - name: Update apt package cache

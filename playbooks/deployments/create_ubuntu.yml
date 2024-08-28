@@ -4,7 +4,8 @@
   gather_facts: no
   vars_files:
     - vars/create_ubuntu_vars.yml
-
+  inventory: ./inventory/hosts.ini  # Update this path if you make any changes to inventory file location
+  
   tasks:
     - name: Clone the virtual machine
       community.vmware.vmware_guest:

@@ -3,6 +3,7 @@
 - name: Create a snapshot of VMs by name on ESXi host
   hosts: localhost
   gather_facts: no
+  inventory: ./inventory/hosts.ini  # Update this path if you make any changes to inventory file location
 
   vars:
     esxi_host: "192.168.xx.xx"  # Replace with your ESXi host IP or hostname and make sure you have ssh access to this server from ansible server.
